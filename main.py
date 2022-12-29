@@ -1,18 +1,63 @@
 from bs4 import BeautifulSoup
 from produto import Produto
+from time import sleep
+from colorama import Fore, Style
 import requests
 
 links = []
+produtos = []
 
-# Função que vai capturar os links dado o nome do arquivo txt que possui os mesmos
+# Captura os links dado o nome do arquivo txt que possui os mesmos
 def capturar_links(nome_arquivo):
     try:
         # Arquivo que tem os links dos produtos que devem ser monitorados
         arquivo_links = open(f'{nome_arquivo}', 'r', encoding='UTF-8')
-        print(f'{nome_arquivo} aberto com sucesso!')
+        print(Fore.GREEN + f'[+] {nome_arquivo} aberto com sucesso!')
         for linha in arquivo_links:
             linha = linha.replace('\n', '')
             links.append(linha)
-        print('Links do arquivo foram capturados')
+        print(Fore.GREEN + f'[+] Links do arquivo {nome_arquivo} foram capturados!')
     except OSError:
-        print(f'Não foi possível abrir o arquivo {nome_arquivo}!')
+        print(Fore.RED + f'[-] Não foi possível abrir o arquivo {nome_arquivo}!')
+
+def formatar_preco(string):
+    # Remover R$
+    string = string.replace('R$', '')
+    # Remover espaço em branco
+    string = string.strip()
+
+    if '.' in string:
+        string = string.replace('.', '')
+    string = string.replace(',', '.')
+    return string
+
+# Realiza o processo de captura dos dados de determinado link, isto é, um produto da KaBuM
+def capturar_dados_link(link):
+    # Caso vá utilizar o script, coloque seu User Agent verdadeiro para conseguir fazer o scraping de dados
+    # User Agent aleatório da internet
+    headers = {'User-Agent' : 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.150 Safari/537.36 RuxitSynthetic/1.0 v3556852051 t3569072820071885698 athfa3c3975 altpub cvcv=2 smf=0'} 
+
+    pagina = requests.get(link, headers=headers)
+    if pagina.status_code == 200:
+        print(Fore.GREEN + '[+] Página carregada com sucesso!')            
+        soup = BeautifulSoup(pagina.content, 'lxml')
+        try:
+            nome = soup.find('h1', {'class' : 'sc-fb499f01-5 kXcukN'}).get_text()
+            preco = soup.find('h4', {'class' : 'sc-d6a30908-1 cRUUoc finalPrice'}).get_text()
+
+            produto = Produto()
+            produto.set_nome(nome)
+            produto.set_preco(formatar_preco(preco))
+            produto.set_link(link)
+            print(Fore.GREEN + '[+] Dados do produto foram scrapados com sucesso!')
+            return produto
+        except:
+            print(Fore.RED + '[-] Não foi possível scrapar os dados do produto!')
+    else:
+        print(Fore.RED + '[-] Não foi possível entrar na página, portanto, os dados do produto contido no link não foram consultados!')
+
+def scrape_todos_links():
+    for url in links:
+        produtos.append(capturar_dados_link(url))
+        print()
+        sleep(4)
