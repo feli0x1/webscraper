@@ -20,4 +20,9 @@ class Produto:
         return self.link
 
     def set_link(self, link):
-        self.link = link        
+        self.link = link
+
+    def imprimirAtributos(self):
+        print(f'{self.get_nome()}')
+        print(f'{self.get_preco()}')
+        print(f'{self.get_link()}')
