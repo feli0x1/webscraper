@@ -24,5 +24,5 @@ class Produto:
 
     def imprimirAtributos(self):
         print(f'{self.get_nome()}')
-        print(f'{self.get_preco()}')
+        print(f'R$ {self.get_preco()}')
         print(f'{self.get_link()}')
