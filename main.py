@@ -1,7 +1,8 @@
 from bs4 import BeautifulSoup
 from produto import Produto
-from time import sleep
 from colorama import Fore, Style
+from datetime import date
+import csv
 import requests
 
 links = []
@@ -57,7 +58,40 @@ def capturar_dados_link(link):
         print(Fore.RED + '[-] Não foi possível entrar na página, portanto, os dados do produto contido no link não foram consultados!')
 
 def scrape_todos_links():
+    from time import sleep
     for url in links:
         produtos.append(capturar_dados_link(url))
         print()
         sleep(4)
+
+def registrar_dados(nome_arquivo, produtos):
+    data_atual = date.today()
+    data_atual = data_atual.strftime("%d/%m/%Y")
+    contador = 1
+
+    try:
+        arquivo = open(f'{nome_arquivo}.csv', 'a+', encoding='UTF-8', newline='')
+        print(Fore.GREEN + f'[+] {nome_arquivo}.csv aberto com sucesso!')
+        writer = csv.writer(arquivo, delimiter=';')
+
+        for produto in produtos:
+            try:
+                linha = [produto.get_nome(), produto.get_preco(), data_atual, produto.get_link()]
+                writer.writerow(linha)
+                print(Fore.GREEN + f'[+] Produto {contador} registrado...')
+            except:
+                print(Fore.RED + f'[-] Não foi possível registrar o produto {contador}...')
+            contador += 1
+        arquivo.close()
+    except:
+        print(Fore.RED + f'[-] Não foi possível abrir o arquivo {nome_arquivo}.csv para registrar os dados!')
+
+nome_arquivo = str(input('Digite o nome do arquivo que possui os links: '))
+capturar_links(nome_arquivo)
+print()
+scrape_todos_links()
+print(Style.RESET_ALL, end='')
+nome_bd_produtos = str(input('Digite o nome do arquivo (csv) que vai registrar os dados dos produtos: '))
+registrar_dados(nome_bd_produtos, produtos)
+print(Style.RESET_ALL, end='')
+print('Programa finalizado!')
